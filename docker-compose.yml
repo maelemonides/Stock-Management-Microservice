@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  flask-app:
+    build:
+      context: ./flask_app
+    ports:
+      - "5000:5000"
+    networks:
+      - my-network
+    volumes:
+      - ./app:/app 
+    depends_on:
+      - sql-server
+
+  sql-server:
+    build:
+      context: ./sql_server
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "abcDEF123#"
+      MSSQL_PID: "Developer"
+    expose:
+      - "1433"
+    networks:
+      - my-network
+    volumes:
+      - ./sql_data:/var/opt/mssql
+    command: ["/bin/bash", "-c", "(/opt/mssql/bin/sqlservr --accept-eula &) | grep -q 'Service Broker manager has started' && /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P abcDEF123# -i /src/filldata.sql"]
+
+networks:
+  my-network:
